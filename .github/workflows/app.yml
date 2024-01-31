@@ -1,13 +1,13 @@
-name: CI/CD Workflow with MariaDB
+name: CI/CD Workflow for CodeIgniter 3 with MariaDB
 
 on:
   push:
-    branches: [ Master ]
+    branches: [ "Master" ]
   pull_request:
-    branches: [ Master ]
+    branches: [ "Master" ]
 
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-latest
 
     services:
@@ -17,12 +17,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: system_pajak
         ports:
-          - 3307:3306
-        options: >-
-          --health-cmd "mysqladmin ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          - 3306:3306
 
     steps:
     - uses: actions/checkout@v2
@@ -30,29 +25,30 @@ jobs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2' # Sesuaikan dengan versi PHP yang Anda gunakan
+        php-version: '8.2'
         extensions: mysqli, pdo_mysql
         coverage: none
 
     - name: Install Dependencies
-      run: composer install --no-progress --prefer-dist --optimize-autoloader
-
-    # Tambahkan langkah untuk menjalankan tes dan migrasi pada database lokal
-    - name: Run Tests and Database Migrations
       run: |
-        # Jalankan perintah untuk menguji aplikasi Anda
-        # Jalankan perintah migrasi database
-        # Contoh: php artisan migrate --database=mysql
+        composer install --no-progress --prefer-dist --optimize-autoloader
 
-    - name: Deploy to Production Server
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Deploy to Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         script: |
-          cd /path/to/your/webroot
+          cd /var/www/
           git pull origin main
           composer install --no-dev
-          # Jalankan perintah untuk migrasi database di server produksi
-          # Contoh: php artisan migrate --force
+          # Jalankan perintah lain seperti migrasi database di server produksi
