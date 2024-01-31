@@ -1,0 +1,56 @@
+name: CI/CD Workflow for CodeIgniter 3 with MariaDB
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:latest
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: system_pajak
+        ports:
+          - 3306:3306
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # Menggunakan v2 agar tidak memerlukan Node.js 16
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mysqli, pdo_mysql
+        coverage: none
+
+    - name: Install Dependencies
+      run: |
+        composer install --no-progress --prefer-dist --optimize-autoloader
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # Menggunakan v2 agar tidak memerlukan Node.js 16
+
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          cd /var/www/
+          git pull origin master
+          composer install --no-dev
+          # Jalankan perintah lain seperti migrasi database di server produksi
