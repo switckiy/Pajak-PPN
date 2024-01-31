@@ -53,4 +53,3 @@ jobs:
           cd /var/www/
           git pull origin master
           composer install --no-dev
-          # Jalankan perintah lain seperti migrasi database di server produksi
