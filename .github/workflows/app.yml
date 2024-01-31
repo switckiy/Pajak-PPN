@@ -20,7 +20,8 @@ jobs:
           - 3306:3306
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # Menggunakan v2 agar tidak memerlukan Node.js 16
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -33,19 +34,14 @@ jobs:
       run: |
         composer install --no-progress --prefer-dist --optimize-autoloader
 
-    # Tambahkan langkah untuk mengkonfigurasi dan migrasi database di sini
-    # Misal:
-    # - name: Migrate Database
-    #   run: |
-    #     # Jalankan perintah migrasi database CodeIgniter
-
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # Menggunakan v2 agar tidak memerlukan Node.js 16
 
     - name: Deploy to Server
       uses: appleboy/ssh-action@master
