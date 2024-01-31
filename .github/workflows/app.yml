@@ -2,9 +2,9 @@ name: CI/CD Workflow for CodeIgniter 3 with MariaDB
 
 on:
   push:
-    branches: [ "Master" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "Master" ]
+    branches: [ "master" ]
 
 jobs:
   build-and-test:
@@ -33,10 +33,16 @@ jobs:
       run: |
         composer install --no-progress --prefer-dist --optimize-autoloader
 
+    # Tambahkan langkah untuk mengkonfigurasi dan migrasi database di sini
+    # Misal:
+    # - name: Migrate Database
+    #   run: |
+    #     # Jalankan perintah migrasi database CodeIgniter
+
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
     - uses: actions/checkout@v3
@@ -49,6 +55,6 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         script: |
           cd /var/www/
-          git pull origin main
+          git pull origin master
           composer install --no-dev
           # Jalankan perintah lain seperti migrasi database di server produksi
